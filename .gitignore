@@ -1,0 +1,44 @@
+## Build results
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+publish/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## VS Code (if you ever open it there)
+.vscode/
+
+## Rider / ReSharper
+.idea/
+_ReSharper*/
+*.DotSettings.user
+
+## NuGet
+*.nupkg
+packages/
+project.lock.json
+
+## Test results
+TestResults/
+[Tt]est[Rr]esult*/
+*.trx
+
+## Logs
+*.log
+logs/
+
+## OS junk
+Thumbs.db
+.DS_Store
+
+## Local secrets (if you ever add them)
+appsettings.*.local.json
+*.pfx
+secrets.json
