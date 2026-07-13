@@ -1,0 +1,26 @@
+@FileProcessorApi_HostAddress = http://localhost:5299
+@ApiKey = super-secret-key-123
+
+### Get processing report
+GET {{FileProcessorApi_HostAddress}}/api/files/report
+X-Api-Key: {{ApiKey}}
+Accept: application/json
+
+### Get report WITHOUT key (should return 401)
+GET {{FileProcessorApi_HostAddress}}/api/files/report
+Accept: application/json
+
+### Upload and process a CSV file
+POST {{FileProcessorApi_HostAddress}}/api/files/process?column=Amount
+X-Api-Key: {{ApiKey}}
+Content-Type: multipart/form-data; boundary=----Boundary
+
+------Boundary
+Content-Disposition: form-data; name="file"; filename="test.csv"
+Content-Type: text/csv
+
+Name,Amount
+Alice,100
+Bob,250.5
+Carol,49.5
+------Boundary--
