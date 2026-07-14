@@ -9,4 +9,5 @@ public class ProcessedFileRecord
     public int RecordCount { get; set; }
     public bool Success { get; set; }
     public string? ErrorMessage { get; set; }
+    public string ClientName { get; set; } = string.Empty;
 }

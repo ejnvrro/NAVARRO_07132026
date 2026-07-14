@@ -4,8 +4,6 @@ services:
     container_name: fp
     ports:
       - "8080:8080"
-    environment:
-      - ApiKey=super-secret-key-123
     volumes:
       - fileprocessor-data:/app/data
 

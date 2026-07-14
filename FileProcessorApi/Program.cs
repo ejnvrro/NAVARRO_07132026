@@ -1,5 +1,6 @@
 using FileProcessorApi.Data;
 using FileProcessorApi.Middleware;
+using FileProcessorApi.Services;
 using FileProcessorApi.Services.FileProcessor;
 using FileProcessorApi.Services.FileTracking;
 using Microsoft.EntityFrameworkCore;
@@ -17,8 +18,8 @@ builder.Services.AddDbContext<FileTrackingDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("Tracking")
         ?? $"Data Source={Path.Combine(dataDir, "tracking.db")}"));
 
+builder.Services.AddSingleton<IApiKeyValidator, ApiKeyValidator>();
 builder.Services.AddScoped<IFileTrackingService, SqliteFileTrackingService>();
-
 builder.Services.AddScoped<IFileProcessor, CsvFileProcessor>();
 builder.Services.AddScoped<IFileProcessor, JsonFileProcessor>();
 

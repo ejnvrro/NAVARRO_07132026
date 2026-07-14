@@ -1,8 +1,12 @@
-﻿namespace FileProcessorApi.Middleware;
+﻿using FileProcessorApi.Services;
+
+namespace FileProcessorApi.Middleware;
 
 public class ApiKeyMiddleware
 {
     private const string ApiKeyHeaderName = "X-Api-Key";
+    public const string ClientNameItemKey = "ClientName";
+
     private readonly RequestDelegate _next;
     private readonly ILogger<ApiKeyMiddleware> _logger;
 
@@ -12,9 +16,8 @@ public class ApiKeyMiddleware
         _logger = logger;
     }
 
-    public async Task InvokeAsync(HttpContext context, IConfiguration configuration)
+    public async Task InvokeAsync(HttpContext context, IApiKeyValidator validator)
     {
-        // Only protect API routes, leave Swagger open for local testing
         if (!context.Request.Path.StartsWithSegments("/api"))
         {
             await _next(context);
@@ -29,8 +32,8 @@ public class ApiKeyMiddleware
             return;
         }
 
-        var expectedKey = configuration["ApiKey"];
-        if (string.IsNullOrEmpty(expectedKey) || !string.Equals(providedKey, expectedKey))
+        var clientName = validator.Validate(providedKey.ToString());
+        if (clientName is null)
         {
             _logger.LogWarning("Request to {Path} rejected: invalid API key", context.Request.Path);
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
@@ -38,6 +41,7 @@ public class ApiKeyMiddleware
             return;
         }
 
+        context.Items[ClientNameItemKey] = clientName;
         await _next(context);
     }
 }

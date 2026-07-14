@@ -14,6 +14,7 @@ public class FileTrackingDbContext : DbContext
     {
         modelBuilder.Entity<ProcessedFileRecord>(entity =>
         {
+            entity.Property(e => e.ClientName).IsRequired().HasMaxLength(100);
             entity.HasKey(e => e.Id);
             entity.Property(e => e.FileName).IsRequired().HasMaxLength(260);
             entity.HasIndex(e => e.ProcessedAtUtc);

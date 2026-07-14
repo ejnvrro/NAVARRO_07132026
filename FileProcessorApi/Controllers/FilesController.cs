@@ -1,4 +1,5 @@
-﻿using FileProcessorApi.Models;
+﻿using FileProcessorApi.Middleware;
+using FileProcessorApi.Models;
 using FileProcessorApi.Services.FileProcessor;
 using FileProcessorApi.Services.FileTracking;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,8 @@ public class FilesController : ControllerBase
         [FromQuery] string? parameter = null,
         CancellationToken ct = default)
     {
+        var clientName = HttpContext.Items[ApiKeyMiddleware.ClientNameItemKey] as string ?? "unknown";
+
         if (file is null || file.Length == 0)
             return BadRequest(new { error = "No file was uploaded." });
 
