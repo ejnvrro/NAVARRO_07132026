@@ -22,6 +22,8 @@ builder.Services.AddSingleton<IApiKeyValidator, ApiKeyValidator>();
 builder.Services.AddScoped<IFileTrackingService, SqliteFileTrackingService>();
 builder.Services.AddScoped<IFileProcessor, CsvFileProcessor>();
 builder.Services.AddScoped<IFileProcessor, JsonFileProcessor>();
+builder.Services.AddHealthChecks()
+    .AddDbContextCheck<FileTrackingDbContext>("database");
 
 builder.Services.AddSwaggerGen(options =>
 {
@@ -73,5 +75,7 @@ app.UseExceptionHandler(errorApp =>
 app.UseMiddleware<ApiKeyMiddleware>();
 
 app.MapControllers();
+
+app.MapHealthChecks("/health");
 
 app.Run();
