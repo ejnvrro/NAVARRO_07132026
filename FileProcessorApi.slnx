@@ -1,3 +1,4 @@
 <Solution>
   <Project Path="FileProcessorApi/FileProcessorApi.csproj" />
+  <Project Path="Tests/Tests.csproj" Id="dfda7153-f8bf-40a0-852f-a483c2073a89" />
 </Solution>
