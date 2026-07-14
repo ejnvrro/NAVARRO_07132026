@@ -1,6 +1,6 @@
 ﻿using FileProcessorApi.Models;
 
-namespace FileProcessorApi.Services;
+namespace FileProcessorApi.Services.FileProcessor;
 
 public interface IFileProcessor
 {

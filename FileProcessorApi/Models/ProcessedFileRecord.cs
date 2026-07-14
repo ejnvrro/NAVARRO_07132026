@@ -1,10 +1,12 @@
-﻿namespace FileProcessorApi.Models
+﻿namespace FileProcessorApi.Models;
+
+public class ProcessedFileRecord
 {
-    public record ProcessedFileRecord(
-        string FileName,
-        DateTime ProcessedAtUtc,
-        long ProcessingTimeMs,
-        int RowCount,
-        bool Success,
-        string? ErrorMessage);
+    public int Id { get; set; }
+    public string FileName { get; set; } = string.Empty;
+    public DateTime ProcessedAtUtc { get; set; }
+    public long ProcessingTimeMs { get; set; }
+    public int RecordCount { get; set; }
+    public bool Success { get; set; }
+    public string? ErrorMessage { get; set; }
 }

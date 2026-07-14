@@ -42,3 +42,8 @@ Thumbs.db
 appsettings.*.local.json
 *.pfx
 secrets.json
+
+## Local SQLite database
+tracking.db
+*.db-shm
+*.db-wal

@@ -1,5 +1,6 @@
 ﻿using FileProcessorApi.Models;
-using FileProcessorApi.Services;
+using FileProcessorApi.Services.FileProcessor;
+using FileProcessorApi.Services.FileTracking;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileProcessorApi.Controllers;
@@ -56,9 +57,14 @@ public class FilesController : ControllerBase
         {
             var result = await processor.ProcessAsync(file, parameter, ct);
 
-            _trackingService.Track(new ProcessedFileRecord(
-                file.FileName, DateTime.UtcNow, result.ProcessingTimeMs, result.RecordCount,
-                Success: true, ErrorMessage: null));
+            await _trackingService.TrackAsync(new ProcessedFileRecord
+            {
+                FileName = file.FileName,
+                ProcessedAtUtc = DateTime.UtcNow,
+                ProcessingTimeMs = result.ProcessingTimeMs,
+                RecordCount = result.RecordCount,
+                Success = true
+            }, ct);
 
             _logger.LogInformation("Processed {FileName} with {Processor}: {Records} records in {Ms} ms",
                 file.FileName, result.Processor, result.RecordCount, result.ProcessingTimeMs);
@@ -67,8 +73,13 @@ public class FilesController : ControllerBase
         }
         catch (InvalidDataException ex)
         {
-            _trackingService.Track(new ProcessedFileRecord(
-                file.FileName, DateTime.UtcNow, 0, 0, Success: false, ErrorMessage: ex.Message));
+            await _trackingService.TrackAsync(new ProcessedFileRecord
+            {
+                FileName = file.FileName,
+                ProcessedAtUtc = DateTime.UtcNow,
+                Success = false,
+                ErrorMessage = ex.Message
+            }, ct);
 
             _logger.LogWarning(ex, "Failed to process {FileName}", file.FileName);
             return BadRequest(new { error = ex.Message });
@@ -77,5 +88,6 @@ public class FilesController : ControllerBase
 
     [HttpGet("report")]
     [ProducesResponseType(typeof(FileReport), StatusCodes.Status200OK)]
-    public IActionResult GetReport() => Ok(_trackingService.GetReport());
+    public async Task<IActionResult> GetReport(CancellationToken ct = default) =>
+        Ok(await _trackingService.GetReportAsync(ct));
 }

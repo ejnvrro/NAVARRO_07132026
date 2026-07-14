@@ -1,5 +1,8 @@
+using FileProcessorApi.Data;
 using FileProcessorApi.Middleware;
-using FileProcessorApi.Services;
+using FileProcessorApi.Services.FileProcessor;
+using FileProcessorApi.Services.FileTracking;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,7 +10,15 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSingleton<IFileTrackingService, InMemoryFileTrackingService>();
+var dataDir = Path.Combine(builder.Environment.ContentRootPath, "data");
+Directory.CreateDirectory(dataDir);
+
+builder.Services.AddDbContext<FileTrackingDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("Tracking")
+        ?? $"Data Source={Path.Combine(dataDir, "tracking.db")}"));
+
+builder.Services.AddScoped<IFileTrackingService, SqliteFileTrackingService>();
+
 builder.Services.AddScoped<IFileProcessor, CsvFileProcessor>();
 builder.Services.AddScoped<IFileProcessor, JsonFileProcessor>();
 
@@ -39,6 +50,12 @@ builder.Services.AddSwaggerGen(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<FileTrackingDbContext>();
+    Directory.CreateDirectory("data");
+    db.Database.EnsureCreated();
+}
 app.UseSwagger();
 app.UseSwaggerUI();
 

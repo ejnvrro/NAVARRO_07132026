@@ -3,7 +3,7 @@ using System.Globalization;
 using CsvHelper;
 using FileProcessorApi.Models;
 
-namespace FileProcessorApi.Services;
+namespace FileProcessorApi.Services.FileProcessor;
 
 public class CsvFileProcessor : IFileProcessor
 {

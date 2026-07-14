@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Text.Json;
 using FileProcessorApi.Models;
 
-namespace FileProcessorApi.Services;
+namespace FileProcessorApi.Services.FileProcessor;
 
 public class JsonFileProcessor : IFileProcessor
 {
