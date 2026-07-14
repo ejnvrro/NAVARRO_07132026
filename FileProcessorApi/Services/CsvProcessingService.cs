@@ -5,22 +5,20 @@ using FileProcessorApi.Models;
 
 namespace FileProcessorApi.Services;
 
-public interface ICsvProcessingService
+public class CsvFileProcessor : IFileProcessor
 {
-    Task<CsvProcessingResult> ProcessAsync(IFormFile file, string column, CancellationToken ct);
-}
+    private readonly ILogger<CsvFileProcessor> _logger;
 
-public class CsvProcessingService : ICsvProcessingService
-{
-    private readonly ILogger<CsvProcessingService> _logger;
-
-    public CsvProcessingService(ILogger<CsvProcessingService> logger)
+    public CsvFileProcessor(ILogger<CsvFileProcessor> logger)
     {
         _logger = logger;
     }
 
-    public async Task<CsvProcessingResult> ProcessAsync(IFormFile file, string column, CancellationToken ct)
+    public string SupportedExtension => ".csv";
+
+    public async Task<FileProcessingResult> ProcessAsync(IFormFile file, string parameter, CancellationToken ct)
     {
+        var column = string.IsNullOrWhiteSpace(parameter) ? "Amount" : parameter;
         var stopwatch = Stopwatch.StartNew();
 
         using var reader = new StreamReader(file.OpenReadStream());
@@ -61,11 +59,11 @@ public class CsvProcessingService : ICsvProcessingService
 
         stopwatch.Stop();
 
-        return new CsvProcessingResult(
+        return new FileProcessingResult(
             FileName: file.FileName,
-            Column: column,
-            RowCount: rowCount,
-            Average: Math.Round(values.Average(), 4),
+            Processor: "csv-average",
+            RecordCount: rowCount,
+            Result: new { Column = column, Average = Math.Round(values.Average(), 4) },
             ProcessingTimeMs: stopwatch.ElapsedMilliseconds);
     }
 }

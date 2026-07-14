@@ -8,7 +8,8 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSingleton<IFileTrackingService, InMemoryFileTrackingService>();
-builder.Services.AddScoped<ICsvProcessingService, CsvProcessingService>();
+builder.Services.AddScoped<IFileProcessor, CsvFileProcessor>();
+builder.Services.AddScoped<IFileProcessor, JsonFileProcessor>();
 
 builder.Services.AddSwaggerGen(options =>
 {

@@ -10,27 +10,30 @@ public class FilesController : ControllerBase
 {
     private const long MaxFileSizeBytes = 10 * 1024 * 1024; // 10 MB
 
-    private readonly ICsvProcessingService _csvService;
+    private readonly IEnumerable<IFileProcessor> _processors;
     private readonly IFileTrackingService _trackingService;
     private readonly ILogger<FilesController> _logger;
 
     public FilesController(
-        ICsvProcessingService csvService,
+        IEnumerable<IFileProcessor> processors,
         IFileTrackingService trackingService,
         ILogger<FilesController> logger)
     {
-        _csvService = csvService;
+        _processors = processors;
         _trackingService = trackingService;
         _logger = logger;
     }
 
-    /// <summary>Uploads a CSV file and returns the average of the specified column.</summary>
+    /// <param name="parameter">
+    /// CSV: column to average (defaults to "Amount").
+    /// JSON: filter expression, e.g. "Amount&gt;100" or "Name=Alice" (required).
+    /// </param>
     [HttpPost("process")]
-    [ProducesResponseType(typeof(CsvProcessingResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(FileProcessingResult), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ProcessFile(
         IFormFile file,
-        [FromQuery] string column = "Amount",
+        [FromQuery] string? parameter = null,
         CancellationToken ct = default)
     {
         if (file is null || file.Length == 0)
@@ -39,19 +42,26 @@ public class FilesController : ControllerBase
         if (file.Length > MaxFileSizeBytes)
             return BadRequest(new { error = "File exceeds the 10 MB size limit." });
 
-        if (!Path.GetExtension(file.FileName).Equals(".csv", StringComparison.OrdinalIgnoreCase))
-            return BadRequest(new { error = "Only .csv files are supported." });
+        var extension = Path.GetExtension(file.FileName);
+        var processor = _processors.FirstOrDefault(p =>
+            p.SupportedExtension.Equals(extension, StringComparison.OrdinalIgnoreCase));
+
+        if (processor is null)
+        {
+            var supported = string.Join(", ", _processors.Select(p => p.SupportedExtension));
+            return BadRequest(new { error = $"Unsupported file type '{extension}'. Supported: {supported}." });
+        }
 
         try
         {
-            var result = await _csvService.ProcessAsync(file, column, ct);
+            var result = await processor.ProcessAsync(file, parameter, ct);
 
             _trackingService.Track(new ProcessedFileRecord(
-                file.FileName, DateTime.UtcNow, result.ProcessingTimeMs, result.RowCount,
+                file.FileName, DateTime.UtcNow, result.ProcessingTimeMs, result.RecordCount,
                 Success: true, ErrorMessage: null));
 
-            _logger.LogInformation("Processed {FileName}: {Rows} rows in {Ms} ms",
-                file.FileName, result.RowCount, result.ProcessingTimeMs);
+            _logger.LogInformation("Processed {FileName} with {Processor}: {Records} records in {Ms} ms",
+                file.FileName, result.Processor, result.RecordCount, result.ProcessingTimeMs);
 
             return Ok(result);
         }
@@ -65,7 +75,6 @@ public class FilesController : ControllerBase
         }
     }
 
-    /// <summary>Returns a report of all files processed since the service started.</summary>
     [HttpGet("report")]
     [ProducesResponseType(typeof(FileReport), StatusCodes.Status200OK)]
     public IActionResult GetReport() => Ok(_trackingService.GetReport());
